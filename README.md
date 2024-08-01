@@ -58,7 +58,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	sudo nano /etc/nginx/sites-available/{{YOUR-DOMAIN-NAME}}
 	example: sudo nano /etc/nginx/sites-available/localhost
 
-	/etc/nginx/sites-available/localhost
+	'/etc/nginx/sites-available/localhost'
 	```
 	server {
         listen 80;              # Nginx will listen on port 80 (HTTP)
@@ -76,6 +76,24 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 	Open browser and navigate to localhost - from there you should be directed to your application.
 	(Note: open your browser in incognito mode to avoid problems)
+
+	* Configure header forwarding settings
+
+	'/etc/nginx/proxy_params'
+	```
+	proxy_set_header Host $http_host;
+	proxy_set_header X-Real-IP $remote_addr;
+	proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	proxy_set_header X-Forwarded-Proto $scheme;
+	```
+
+	* Create softlink to our configuration from sites-enabled directory that Nginx reads at startup
+
+	sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
+
+	* Restart Nginx to apply changes
+
+	sudo systemctl restart nginx
 
 ### 4. Install ModSecurity on Nginx
 
