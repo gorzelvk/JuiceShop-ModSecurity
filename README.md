@@ -210,7 +210,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 ###### Change default SecRuleEngine value
 
 ######  '/etc/nginx/modsec/modsecurity.conf'
-        ```
+	```
 	....
         SecRuleEngine On
 	...
