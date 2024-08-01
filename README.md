@@ -73,8 +73,8 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 ##### Verify if the configuration is working
 
-	Open browser and navigate to localhost - from there you should be directed to your application.
-	(Note: open your browser in incognito mode to avoid problems)
+###### Open browser and navigate to localhost - from there you should be directed to your application.
+###### (Note: open your browser in incognito mode to avoid problems)
 
 ##### Configure header forwarding settings
 
@@ -131,9 +131,9 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 ##### Download ModSecurity-Nginx Connector
 
-	ModSecurity-Nginx Connector is a module for Nginx that integrates ModSecurity, a Web Application Firewall (WAF),
-	with the Nginx web server. It acts as a bridge, allowing ModSecurity to analyze HTTP requests and apply security rules
-	directly within the Nginx environment.
+######	ModSecurity-Nginx Connector is a module for Nginx that integrates ModSecurity, a Web Application Firewall (WAF),
+######	with the Nginx web server. It acts as a bridge, allowing ModSecurity to analyze HTTP requests and apply security rules
+######	directly within the Nginx environment.
 
 ##### Clone ModSecurity-Nginx connector into /opt dir
 
