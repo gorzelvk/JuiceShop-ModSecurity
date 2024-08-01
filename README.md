@@ -162,7 +162,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	--http-proxy-temp-path=/var/lib/nginx/proxy --http-scgi-temp-path=/var/lib/nginx/scgi --http-uwsgi-temp-path=/var/lib/nginx/uwsgi --with-compat \
   	--with-debug --with-pcre-jit --with-http_ssl_module --with-http_stub_status_module --with-http_realip_module --with-http_auth_request_module \
 	--with-http_v2_module --with-http_dav_module --with-http_slice_module --with-threads --add-dynamic-module=/build/nginx-zctdR4/nginx-1.18.0/debian/modules/http-geoip2 \
-	--with-http_addition_module --with-http_gunzip_module \--with-http_gzip_static_module --with-http_sub_module
+	--with-http_addition_module --with-http_gunzip_module --with-http_gzip_static_module --with-http_sub_module
 	```
 
 ##### Compile ModSecurity module with configure arguments
@@ -184,5 +184,62 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 
 ### 5. Add CoreRuleSet to ModSecurity
+
+###### Delete default rule set
+
+	sudo rm -rf /usr/share/modsecurity-crs
+
+###### Clone CoreRuleSet repository into /usr/share/modsecurity-crs
+
+	sudo git clone https://github.com/coreruleset/coreruleset /usr/local/modsecurity-crs
+
+###### Remove the .example extensions of crs-setup.conf and exclusion rule file
+
+	sudo mv /usr/local/modsecurity-crs/crs-setup.conf.example /usr/local/modsecurity-crs/crs-setup.conf
+	sudo mv /usr/local/modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example /usr/local/modsecurity-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+
+###### Create ModSecurity directory in /etc/nginx/ directory
+
+	sudo mkdir -p /etc/nginx/modsec
+
+###### Copy unicode mapping file and ModSecurity configuration file into /modsec directory
+
+	sudo cp /opt/ModSecurity/unicode.mapping /etc/nginx/modsec
+	sudo cp /opt/ModSecurity/modsecurity.conf-recommended /etc/nginx/modsec/modsecurity.conf
+
+###### Change default SecRuleEngine value
+
+######  '/etc/nginx/modsec/modsecurity.conf'
+        ```
+	....
+        SecRuleEngine On
+	...
+	```	
+
+###### Create main configuration file under /etc/nginx/modsec directory
+
+	sudo touch /etc/nginx/modsec/main.conf
+
+###### Specify rules and ModSecurity configuration file for Nginx
+
+	Include /etc/nginx/modsec/modsecurity.conf
+	Include /usr/local/modsecurity-crs/crs-setup.conf
+	Include /usr/local/modsecurity-crs/rules/*.conf
+
+###### Insert following lines into http block in /etc/nginx/nginx.conf configuration file
+
+###### 	'/etc/nginx/nginx.conf'	
+
+###### 	Load ModSecurity configuration files into Nginx
+
+	modsecurity on; 
+	modsecurity_rules_file /etc/nginx/modsec/main.conf;
+	include /etc/nginx/conf.d/*.conf; 
+	include /etc/nginx/sites-enabled/*;
+
+######	Specify log files path
+
+	access_log /var/log/nginx/access.log; 
+	error_log /var/log/nginx/error.log;
 
 ### 6. Implement additional rules
