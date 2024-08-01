@@ -19,40 +19,40 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
 
-	* Start your cluster:
+##### Start your cluster:
 
 	minikube start
 
 ### 2. Deploy OWASP Juice Shop application
 
-	* Install JuiceShop app on kubernetes with helm (helm >= 3.7 required)
+##### Install JuiceShop app on kubernetes with helm (helm >= 3.7 required)
 	
 	helm install multi-juicer oci://ghcr.io/juice-shop/multi-juicer/helm/multi-juicer
 	
-	* Verify deployment
+##### Verify deployment
 	
 	kubectl get pods
 
-	* Expose your application with Kubernetes service
+##### Expose your application with Kubernetes service
 
 	kubectl port-forward svc/juice-balancer 3000:3000
 
 ### 3. Configure Nginx as reverse-proxy
 
-	* Install Nginx	
+##### Install Nginx	
 
 	sudo apt update
 	sudo apt install nginx
 
-	* Allow access to Nginx through firewall
+##### Allow access to Nginx through firewall
 
 	sudo ufw allow 'Nginx HTTP'
 
-	* Verify that Nginx is running
+##### Verify that Nginx is running
 
 	systemctl status nginx
 
-	* Configure server block
+##### Configure server block
 
 	sudo nano /etc/nginx/sites-available/{{YOUR-DOMAIN-NAME}}
 	example: sudo nano /etc/nginx/sites-available/localhost
@@ -71,12 +71,12 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	}
 	```
 
-	* Verify if the configuration is working
+##### Verify if the configuration is working
 
 	Open browser and navigate to localhost - from there you should be directed to your application.
 	(Note: open your browser in incognito mode to avoid problems)
 
-	* Configure header forwarding settings
+##### Configure header forwarding settings
 
 	'/etc/nginx/proxy_params'
 	```
@@ -86,65 +86,65 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	proxy_set_header X-Forwarded-Proto $scheme;
 	```
 
-	* Create softlink to our configuration from sites-enabled directory that Nginx reads at startup
+##### Create softlink to our configuration from sites-enabled directory that Nginx reads at startup
 
 	sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
 
-	* Restart Nginx to apply changes
+##### Restart Nginx to apply changes
 
 	sudo systemctl restart nginx
 
 ### 4. Install ModSecurity on Nginx
 
-	* Install dependencies required for ModSecurity build and compilation process
+##### Install dependencies required for ModSecurity build and compilation process
 
 	sudo apt-get install bison build-essential ca-certificates curl dh-autoreconf doxygen \
 	flex gawk git iputils-ping libcurl4-gnutls-dev libexpat1-dev libgeoip-dev liblmdb-dev \
   	libpcre3-dev libpcre++-dev libssl-dev libtool libxml2 libxml2-dev libyajl-dev locales \
   	lua5.3-dev pkg-config wget zlib1g-dev zlibc libxslt libgd-dev
 
-	* Clone ModSecurity repository into /opt dir
+##### Clone ModSecurity repository into /opt dir
 
 	cd /opt && sudo git clone https://github.com/SpiderLabs/ModSecurity
 
-	* Initialize and update submodule
+##### Initialize and update submodule
 	
 	cd ModSecurity	
 	sudo git submodule init
 	sudo git submodule update
 	
-	* Run build.sh script
+##### Run build.sh script
 
 	sudo ./build.sh
 
-	* Run configure file to get dependencies required for build process
+##### Run configure file to get dependencies required for build process
 
 	sudo ./configure
 
-	* Build ModSecurity
+##### Build ModSecurity
 
 	sudo make
 	
-	* Install ModSecurity
+##### Install ModSecurity
 	
 	sudo make install
 
-	* Download ModSecurity-Nginx Connector
+##### Download ModSecurity-Nginx Connector
 
 	ModSecurity-Nginx Connector is a module for Nginx that integrates ModSecurity, a Web Application Firewall (WAF),
 	with the Nginx web server. It acts as a bridge, allowing ModSecurity to analyze HTTP requests and apply security rules
 	directly within the Nginx environment.
 
-	* Clone ModSecurity-Nginx connector into /opt dir
+##### Clone ModSecurity-Nginx connector into /opt dir
 
 	cd /opt && sudo git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git
 
-	* Download exact version of Nginx that is running on your system into /opt dir and extract the tarball
+##### Download exact version of Nginx that is running on your system into /opt dir and extract the tarball
 
 	cd /opt && sudo wget http://nginx.org/download/nginx-{{NGINX-VERSION}}.tar.gz
 	sudo tar -xvzmf nginx-{{NGINX-VERSION}}.tar.gz
 
-	* Display configure arguments used for Nginx
+##### Display configure arguments used for Nginx
 
 	nginx -V
 
@@ -165,20 +165,20 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	--with-http_addition_module --with-http_gunzip_module \--with-http_gzip_static_module --with-http_sub_module
 	```
 
-	* Compile ModSecurity module with configure arguments
+##### Compile ModSecurity module with configure arguments
 		
 	sudo ./configure --add-dynamic-module=../ModSecurity-nginx <Configure Arguments>
 
-	* Build modules
+##### Build modules
 
 	sudo make modules
 
-	* Copy compiled ModSecurity module into Nginx configuration directory
+##### Copy compiled ModSecurity module into Nginx configuration directory
 
 	sudo mkdir /etc/nginx/modules
 	sudo cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules
 
-	* Load ModSecurity Module in Nginx
+##### Load ModSecurity Module in Nginx
 	Copy the following into /etc/nginx/nginx.conf:
 
 	load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
