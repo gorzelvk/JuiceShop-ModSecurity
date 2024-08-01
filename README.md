@@ -155,7 +155,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	nginx version: nginx/1.18.0 (Ubuntu)
 	built with OpenSSL 3.0.2 15 Mar 2022
 	TLS SNI support enabled
-	<configure arguments:> --with-cc-opt='-g -O2 -ffile-prefix-map=/build/nginx-zctdR4/nginx-1.18.0=. -flto=auto -ffat-lto-objects -flto=auto \
+	configure arguments: --with-cc-opt='-g -O2 -ffile-prefix-map=/build/nginx-zctdR4/nginx-1.18.0=. -flto=auto -ffat-lto-objects -flto=auto \
 	-ffat-lto-objects -fstack-protector-strong -Wformat -Werror=format-security -fPIC -Wdate-time -D_FORTIFY_SOURCE=2' --with-ld-opt='-Wl, \
 	-Bsymbolic-functions -flto=auto -ffat-lto-objects -flto=auto -Wl,-z,relro -Wl,-z,now -fPIC' --prefix=/usr/share/nginx --conf-path=/etc/nginx/nginx.conf \
 	--http-log-path=/var/log/nginx/access.log --error-log-path=/var/log/nginx/error.log --lock-path=/var/lock/nginx.lock --pid-path=/run/nginx.pid \
@@ -169,6 +169,20 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	* Compile ModSecurity module with configure arguments
 		
 	sudo ./configure --add-dynamic-module=../ModSecurity-nginx <Configure Arguments>
+
+	* Build modules
+
+	sudo make modules
+
+	* Copy compiled ModSecurity module into Nginx configuration directory
+
+	sudo mkdir /etc/nginx/modules
+	sudo cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules
+
+	* Load ModSecurity Module in Nginx
+	Copy the following into /etc/nginx/nginx.conf:
+
+	load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 
 ### 5. Add CoreRuleSet to ModSecurity
 
