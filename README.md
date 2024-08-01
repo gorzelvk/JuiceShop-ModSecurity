@@ -6,9 +6,10 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 1. **Launch Kubernetes cluster**
 2. **Deploy OWASP Juice Shop application**
-3. **Configure Nginx as reverse-proxy with ModSecurity installed on it**
-4. **Interact with the application and analyze Logs**
-5. **Implement additional rules**
+3. **Configure Nginx as reverse-proxy**
+4. **Install ModSecurity on Nginx**
+5. **Add CoreRuleSet to ModSecurity**
+6. **Implement additional rules**
 
 
 
@@ -28,3 +29,19 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	* Install JuiceShop app on kubernetes with helm (helm >= 3.7 required)
 	
 	helm install multi-juicer oci://ghcr.io/juice-shop/multi-juicer/helm/multi-juicer
+	
+	* Verify deployment
+	
+	kubectl get pods
+
+	* Expose your application with Kubernetes service
+
+	kubectl port-forward svc/juice-balancer 3000:3000
+
+### 3. Configure Nginx as reverse-proxy
+
+### 4. Install ModSecurity on Nginx
+
+### 5. Add CoreRuleSet to ModSecurity
+
+### 6. Implement additional rules
