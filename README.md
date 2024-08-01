@@ -14,8 +14,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 
 ### 1. Launch local Kubernetes cluster
-
-	* Run the following command to download the Minikube binary
+##### Run the following command to download the Minikube binary
 
 	curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
 	sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
