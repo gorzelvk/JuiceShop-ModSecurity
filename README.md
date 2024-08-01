@@ -40,6 +40,43 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 ### 3. Configure Nginx as reverse-proxy
 
+	* Install Nginx	
+
+	sudo apt update
+	sudo apt install nginx
+
+	* Allow access to Nginx through firewall
+
+	sudo ufw allow 'Nginx HTTP'
+
+	* Verify that Nginx is running
+
+	systemctl status nginx
+
+	* Configure server block
+
+	sudo nano /etc/nginx/sites-available/{{YOUR-DOMAIN-NAME}}
+	example: sudo nano /etc/nginx/sites-available/localhost
+
+	/etc/nginx/sites-available/localhost
+	```
+	server {
+        listen 80;              # Nginx will listen on port 80 (HTTP)
+        listen [::]:80;         # IPv6 port 80
+
+        server_name localhost;
+
+        location / {
+                proxy_pass http://127.0.0.1:3000; # Enable reverse-proxy functionality
+        	}
+	}
+	```
+
+	* Verify if the configuration is working
+
+	Open browser and navigate to localhost - from there you should be directed to your application.
+	(Note: open your browser in incognito mode to avoid problems)
+
 ### 4. Install ModSecurity on Nginx
 
 ### 5. Add CoreRuleSet to ModSecurity
