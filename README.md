@@ -97,6 +97,79 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 ### 4. Install ModSecurity on Nginx
 
+	* Install dependencies required for ModSecurity build and compilation process
+
+	sudo apt-get install bison build-essential ca-certificates curl dh-autoreconf doxygen \
+	flex gawk git iputils-ping libcurl4-gnutls-dev libexpat1-dev libgeoip-dev liblmdb-dev \
+  	libpcre3-dev libpcre++-dev libssl-dev libtool libxml2 libxml2-dev libyajl-dev locales \
+  	lua5.3-dev pkg-config wget zlib1g-dev zlibc libxslt libgd-dev
+
+	* Clone ModSecurity repository into /opt dir
+
+	cd /opt && sudo git clone https://github.com/SpiderLabs/ModSecurity
+
+	* Initialize and update submodule
+	
+	cd ModSecurity	
+	sudo git submodule init
+	sudo git submodule update
+	
+	* Run build.sh script
+
+	sudo ./build.sh
+
+	* Run configure file to get dependencies required for build process
+
+	sudo ./configure
+
+	* Build ModSecurity
+
+	sudo make
+	
+	* Install ModSecurity
+	
+	sudo make install
+
+	* Download ModSecurity-Nginx Connector
+
+	ModSecurity-Nginx Connector is a module for Nginx that integrates ModSecurity, a Web Application Firewall (WAF),
+	with the Nginx web server. It acts as a bridge, allowing ModSecurity to analyze HTTP requests and apply security rules
+	directly within the Nginx environment.
+
+	* Clone ModSecurity-Nginx connector into /opt dir
+
+	cd /opt && sudo git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git
+
+	* Download exact version of Nginx that is running on your system into /opt dir and extract the tarball
+
+	cd /opt && sudo wget http://nginx.org/download/nginx-{{NGINX-VERSION}}.tar.gz
+	sudo tar -xvzmf nginx-{{NGINX-VERSION}}.tar.gz
+
+	* Display configure arguments used for Nginx
+
+	nginx -V
+
+	Example output for Nginx:1.18.0
+
+	```
+	nginx version: nginx/1.18.0 (Ubuntu)
+	built with OpenSSL 3.0.2 15 Mar 2022
+	TLS SNI support enabled
+	<configure arguments:> --with-cc-opt='-g -O2 -ffile-prefix-map=/build/nginx-zctdR4/nginx-1.18.0=. -flto=auto -ffat-lto-objects -flto=auto \
+	-ffat-lto-objects -fstack-protector-strong -Wformat -Werror=format-security -fPIC -Wdate-time -D_FORTIFY_SOURCE=2' --with-ld-opt='-Wl, \
+	-Bsymbolic-functions -flto=auto -ffat-lto-objects -flto=auto -Wl,-z,relro -Wl,-z,now -fPIC' --prefix=/usr/share/nginx --conf-path=/etc/nginx/nginx.conf \
+	--http-log-path=/var/log/nginx/access.log --error-log-path=/var/log/nginx/error.log --lock-path=/var/lock/nginx.lock --pid-path=/run/nginx.pid \
+	--modules-path=/usr/lib/nginx/modules --http-client-body-temp-path=/var/lib/nginx/body --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
+	--http-proxy-temp-path=/var/lib/nginx/proxy --http-scgi-temp-path=/var/lib/nginx/scgi --http-uwsgi-temp-path=/var/lib/nginx/uwsgi --with-compat \
+  	--with-debug --with-pcre-jit --with-http_ssl_module --with-http_stub_status_module --with-http_realip_module --with-http_auth_request_module \
+	--with-http_v2_module --with-http_dav_module --with-http_slice_module --with-threads --add-dynamic-module=/build/nginx-zctdR4/nginx-1.18.0/debian/modules/http-geoip2 \
+	--with-http_addition_module --with-http_gunzip_module \--with-http_gzip_static_module --with-http_sub_module
+	```
+
+	* Compile ModSecurity module with configure arguments
+		
+	sudo ./configure --add-dynamic-module=../ModSecurity-nginx <Configure Arguments>
+
 ### 5. Add CoreRuleSet to ModSecurity
 
 ### 6. Implement additional rules
