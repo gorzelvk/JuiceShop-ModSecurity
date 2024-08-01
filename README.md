@@ -55,9 +55,9 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 ##### Configure server block
 
 	sudo nano /etc/nginx/sites-available/{{YOUR-DOMAIN-NAME}}
-	example: sudo nano /etc/nginx/sites-available/localhost
+######	example: sudo nano /etc/nginx/sites-available/localhost
 
-	'/etc/nginx/sites-available/localhost'
+######	'/etc/nginx/sites-available/localhost'
 	```
 	server {
         listen 80;              # Nginx will listen on port 80 (HTTP)
@@ -78,7 +78,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 ##### Configure header forwarding settings
 
-	'/etc/nginx/proxy_params'
+######	'/etc/nginx/proxy_params'
 	```
 	proxy_set_header Host $http_host;
 	proxy_set_header X-Real-IP $remote_addr;
@@ -148,7 +148,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 	nginx -V
 
-	Example output for Nginx:1.18.0
+######	Example output for Nginx:1.18.0
 
 	```
 	nginx version: nginx/1.18.0 (Ubuntu)
