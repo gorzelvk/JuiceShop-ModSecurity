@@ -179,7 +179,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 	sudo cp objs/ngx_http_modsecurity_module.so /etc/nginx/modules
 
 ##### Load ModSecurity Module in Nginx
-	Copy the following into /etc/nginx/nginx.conf:
+###### Copy the following into /etc/nginx/nginx.conf:
 
 	load_module /etc/nginx/modules/ngx_http_modsecurity_module.so;
 
