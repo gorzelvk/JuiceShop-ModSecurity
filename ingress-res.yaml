@@ -4,9 +4,9 @@ metadata:
   name: juice-ingress
   namespace: default
 spec:
-#  ingressClassName: nginx
+  ingressClassName: nginx
   rules:
-  - host: ""  # Adres IP Nginx Ingress Controller
+  - host: ""
     http:
       paths:
       - path: /
@@ -15,6 +15,6 @@ spec:
           service:
             name: juice-balancer
             port:
-              number: 3000  # Port, na którym usługa jest dostępna wewnętrznie
+              number: 3000
 
 

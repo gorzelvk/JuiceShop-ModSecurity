@@ -8,7 +8,7 @@ spec:
     app.kubernetes.io/name: juice-balancer
   ports:
     - protocol: TCP
-      port: 3000       # Port, na którym usługa będzie dostępna wewnątrz klastra
-      targetPort: 3000  # Port, na którym aplikacja działa wewnątrz poda
+      port: 3000       # Port inside the cluster
+      targetPort: 3000  # Port inside the pod
 
 
