@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: juice-balancer
+  namespace: default
+spec:
+  selector:
+    app.kubernetes.io/name: juice-balancer
+  ports:
+    - protocol: TCP
+      port: 3000       # Port, na którym usługa będzie dostępna wewnątrz klastra
+      targetPort: 3000  # Port, na którym aplikacja działa wewnątrz poda
+
+

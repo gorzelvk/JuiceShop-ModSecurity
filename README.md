@@ -2,16 +2,150 @@ JuiceShop application with ModSecurity installed on nginx reverse-proxy
 
 This document outlines the steps to set up a Kubernetes cluster with the OWASP Juice Shop application and configure ModSecurity with Core Rule Set (CRS).
 
-## Steps Overview
+# Self-hosted Installation Steps Overview
 
-1. **Launch Kubernetes cluster**
+1. **Launch Kubernetes Cluster**
+2. **Deploy OWASP Juice Shop application**
+3. **Install Nginx Ingress Controller with ModSecurity and CRS**
+
+### 1. Launch Kubernetes Cluster
+##### Install kubernetes-client and kubernetes-kubeadm
+
+	sudo dnf install kubernetes kubernetes-kubeadm kubernetes-client
+
+##### Update system with dnf
+
+	sudo dnf update
+
+##### Disable swap and reboot system
+
+	sudo systemctl stop swap-create@zram0
+	sudo dnf remove zram-generator-defaults
+	sudo reboot now
+
+##### Disable firewall
+
+	sudo systemctl disable --now firewalld
+
+##### Install iptables and iproute-tc
+
+	sudo dnf install iptables iproute-tc
+
+##### Configure IPv4 forwarding and bridge filters
+
+	sudo cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+	overlay
+	br_netfilter
+	EOF
+
+##### Load the overlay and bridge filter modules
+
+	sudo modprobe overlay
+	sudo modprobe br_netfilter
+
+##### Add required sysctl parameters and persist
+
+	# sysctl params required by setup, params persist across reboots
+	sudo cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+	net.bridge.bridge-nf-call-iptables  = 1
+	net.bridge.bridge-nf-call-ip6tables = 1
+	net.ipv4.ip_forward                 = 1
+	EOF
+
+##### Apply sysctl parameters without a reboot
+
+	sudo sysctl --system
+
+##### Verify br_filter and overlay modules are loaded
+
+	lsmod | grep br_netfilter
+	lsmod | grep overlay
+
+##### Verify that the net.bridge.bridge-nf-call-iptables, net.bridge.bridge-nf-call-ip6tables, and net.ipv4.ip_forward system variables are set to 1
+
+	sysctl net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables net.ipv4.ip_forward
+
+##### Install and enable CRI-O and containernetworking plugins
+
+	sudo dnf install cri-o containernetworking-plugins
+	sudo systemctl enable --now crio
+
+##### Install package dependencies from the official repositories
+
+	sudo dnf install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+##### Add the Kubernetes and CRI-o repository
+
+	[kubernetes]
+	name=Kubernetes
+	baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
+	enabled=1
+	gpgcheck=1
+	gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+	exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+
+
+##### Pull system container images
+
+	sudo kubeadm config images pull
+
+
+##### Enable kubelet
+
+	sudo systemctl enable --now kubelet
+
+
+##### Initialize cluster
+###### In case of [ERROR CRI]: container runtime is not running comment out lines below
+	# sudo rm /etc/containerd/config.toml
+	# sudo systemctl restart containerd
+
+	sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+
+##### Start using your cluster as a regular user
+
+	mkdir -p $HOME/.kube
+	sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+	sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+##### Allow control plane machine to run pods for applications
+
+	kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+
+##### Provide cluster networking
+
+	kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
+
+### 2. Deploy OWASP Juice Shop application**
+##### Install JuiceShop app on kubernetes with helm (helm >= 3.7 required)
+	
+	helm install multi-juicer oci://ghcr.io/juice-shop/multi-juicer/helm/multi-juicer
+
+##### Expose your application with Kubernetes service
+
+	kubectl apply -f juice-svc.yaml
+
+### 3. Install Nginx Ingress Controller with ModSecurity and CRS
+##### Install nginx ingress controller and turn on ModSecurity features
+
+	helm install nginx-ingress ingress-nginx/ingress-nginx -f values.yaml
+
+##### Create ingress resource
+
+	kubectl apply -f ingress-res.yaml
+
+
+
+
+# Local Installation Steps Overview
+
+1. **Launch Local Kubernetes Cluster**
 2. **Deploy OWASP Juice Shop application**
 3. **Configure Nginx as reverse-proxy**
 4. **Install ModSecurity on Nginx**
 5. **Add CoreRuleSet to ModSecurity**
 6. **Implement additional rules**
-
-
 
 ### 1. Launch local Kubernetes cluster
 ##### Run the following command to download the Minikube binary

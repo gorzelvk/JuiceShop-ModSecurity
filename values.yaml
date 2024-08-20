@@ -1,0 +1,34 @@
+controller:
+  config:
+    # Enables Modsecurity
+    enable-modsecurity: "true"
+    enable-modsecurity-snippet: "true"
+    # Update ModSecurity config and rules
+    modsecurity-snippet: |
+      # this enables the default OWASP Core Rule Set
+      Include /etc/nginx/owasp-modsecurity-crs/nginx-modsecurity.conf
+
+      # Enable prevention mode. Options: DetectionOnly,On,Off (default is DetectionOnly)
+      SecRuleEngine On
+
+      # Enable scanning of the request body
+      SecRequestBodyAccess On
+
+      # Enable XML and JSON parsing
+      SecRule REQUEST_HEADERS:Content-Type "(?:text|application(?:/soap\+|/)|application/xml)/" \
+        "id:200000,phase:1,t:none,t:lowercase,pass,nolog,ctl:requestBodyProcessor=XML"
+
+      SecRule REQUEST_HEADERS:Content-Type "application/json" \
+        "id:200001,phase:1,t:none,t:lowercase,pass,nolog,ctl:requestBodyProcessor=JSON"
+
+      # Reject if larger (we could also let it pass with ProcessPartial)
+      SecRequestBodyLimitAction Reject
+
+      # Send ModSecurity audit logs to the stdout (only for rejected requests)
+      SecAuditLog /dev/stdout
+
+      # format the logs in JSON
+      SecAuditLogFormat JSON
+
+      # could be On/Off/RelevantOnly
+      SecAuditEngine RelevantOnly
