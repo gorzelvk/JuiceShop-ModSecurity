@@ -117,7 +117,7 @@ This document outlines the steps to set up a Kubernetes cluster with the OWASP J
 
 	kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
 
-### 2. Deploy OWASP Juice Shop application**
+### 2. Deploy OWASP Juice Shop application
 ##### Install JuiceShop app on kubernetes with helm (helm >= 3.7 required)
 	
 	helm install multi-juicer oci://ghcr.io/juice-shop/multi-juicer/helm/multi-juicer
