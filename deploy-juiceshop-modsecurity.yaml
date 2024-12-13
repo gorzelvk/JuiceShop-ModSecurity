@@ -1,0 +1,116 @@
+---
+- name: Deployment of JuiceShop app with configured ModSecurity running on nginx reverse-proxy
+  hosts: localhost
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Update apt package index
+      ansible.builtin.apt:
+        update_cache: yes
+      ignore_errors: yes
+
+    - name: Install required system dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-yaml
+        state: present
+
+    - name: Add Docker GPG key
+      ansible.builtin.shell: |
+        curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+    - name: Add Docker repository for Debian bullseye
+      copy:
+        content: |
+          deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable
+        dest: /etc/apt/sources.list.d/docker.list
+
+    - name: Update apt package index after adding Docker repo
+      apt:
+        update_cache: yes
+      ignore_errors: yes
+
+    - name: Install Docker
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: present
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Download Minikube binary
+      ansible.builtin.get_url:
+        url: "https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64"
+        dest: "/tmp/minikube-linux-amd64"
+        mode: '0755'
+
+    - name: Install Minikube binary
+      ansible.builtin.shell: "install /tmp/minikube-linux-amd64 /usr/local/bin/minikube && rm /tmp/minikube-linux-amd64"
+
+    - name: Install kubectl
+      ansible.builtin.apt:
+        name: kubernetes-client
+        state: present
+
+    - name: Download and install Helm
+      ansible.builtin.shell: |
+        curl -fsSL -o /tmp/get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod +x /tmp/get_helm.sh
+        /tmp/get_helm.sh
+      args:
+        creates: /usr/local/bin/helm
+
+    - name: Start Minikube
+      ansible.builtin.shell: minikube start --driver=docker
+      become: false
+
+    - name: Install Multi-Juicer with Helm
+      ansible.builtin.shell: >
+        helm install multi-juicer oci://ghcr.io/juice-shop/multi-juicer/helm/multi-juicer
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+      ignore_errors: true
+
+    - name: Expose app with Kubernetes service
+      ansible.builtin.shell: >
+        nohup kubectl port-forward svc/juice-balancer 3000:3000 &
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+
+    - name: Add ingress-nginx repository to Helm
+      ansible.builtin.shell: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && helm repo update
+
+    - name: Install nginx-ingress using Helm
+      ansible.builtin.shell: |
+        helm install nginx-ingress ingress-nginx/ingress-nginx -f values.yaml
+      args:
+        chdir: "{{ playbook_dir }}"
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+      ignore_errors: true
+
+    - name: Wait 30 seconds
+      ansible.builtin.pause:
+        seconds: 30
+
+    - name: Apply Kubernetes resources using kubectl
+      ansible.builtin.shell: |
+        kubectl apply -f ingress-res.yaml
+      args:
+        chdir: "{{ playbook_dir }}"
+      environment:
+        KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+      ignore_errors: true
